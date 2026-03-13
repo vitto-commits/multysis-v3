@@ -18,11 +18,24 @@ export default function LoginPage() {
     e.preventDefault()
     setLoading(true)
     setError('')
-    const { error: err } = await supabase.auth.signInWithPassword({ email, password })
+    const { data: authData, error: err } = await supabase.auth.signInWithPassword({ email, password })
     if (err) {
       setError(err.message)
       setLoading(false)
       return
+    }
+    // Check if user is admin — redirect accordingly
+    if (authData.user) {
+      const { data: profile } = await supabase
+        .from('ms_profiles')
+        .select('role')
+        .eq('user_id', authData.user.id)
+        .single()
+      if (profile?.role === 'admin' || profile?.role === 'staff') {
+        router.push('/admin/dashboard')
+        router.refresh()
+        return
+      }
     }
     router.push('/')
     router.refresh()
