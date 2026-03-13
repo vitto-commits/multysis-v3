@@ -48,11 +48,10 @@ export default function LoginPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-3 mb-2">
             <img src="/city-seal.png" alt="City of Borongan Seal" className="w-10 h-10 object-contain" />
-            
             <div className="text-left">
-              <div className="font-bold text-gray-900 leading-none">Borongan E-Services
-              <div className="text-xs text-gray-500">City of Borongan
-            
+              <div className="font-bold text-gray-900 leading-none">Borongan E-Services</div>
+              <div className="text-xs text-gray-500">City of Borongan</div>
+            </div>
           </Link>
           <h1 className="text-2xl font-extrabold text-gray-900 mt-4">Welcome back</h1>
           <p className="text-gray-500 text-sm mt-1">Sign in to access your government services</p>
