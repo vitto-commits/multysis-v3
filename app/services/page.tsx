@@ -67,6 +67,7 @@ function ServicesContent() {
       const { data } = await supabase
         .from('ms_services')
         .select('*')
+        .eq('is_active', true)
         .order('category')
       setServices(data || [])
       setLoading(false)
