@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Missing required fields' }, { status: 400 })
   }
 
-  const validRoles = ['admin', 'bplo', 'assessor', 'treasurer', 'staff', 'citizen']
+  const validRoles = ['admin', 'bplo', 'assessor', 'treasurer', 'csdo', 'staff', 'citizen']
   if (!validRoles.includes(role)) {
     return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
   }

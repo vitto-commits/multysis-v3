@@ -38,7 +38,7 @@ export async function middleware(request: NextRequest) {
       .eq('user_id', user.id)
       .single()
 
-    if (!profile || !['admin', 'staff', 'bplo', 'assessor', 'treasurer'].includes(profile.role)) {
+    if (!profile || !['admin', 'staff', 'bplo', 'assessor', 'treasurer', 'csdo'].includes(profile.role)) {
       return NextResponse.redirect(new URL('/admin/login', request.url))
     }
   }
@@ -58,7 +58,7 @@ export async function middleware(request: NextRequest) {
       .eq('user_id', user.id)
       .single()
 
-    if (profile && ['admin', 'staff', 'bplo', 'assessor', 'treasurer'].includes(profile.role)) {
+    if (profile && ['admin', 'staff', 'bplo', 'assessor', 'treasurer', 'csdo'].includes(profile.role)) {
       return NextResponse.redirect(new URL('/admin/dashboard', request.url))
     }
     return NextResponse.redirect(new URL('/', request.url))

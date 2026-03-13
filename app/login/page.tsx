@@ -31,7 +31,7 @@ export default function LoginPage() {
         .select('role')
         .eq('user_id', authData.user.id)
         .single()
-      if (profile && ['admin', 'staff', 'bplo', 'assessor', 'treasurer'].includes(profile.role)) {
+      if (profile && ['admin', 'staff', 'bplo', 'assessor', 'treasurer', 'csdo'].includes(profile.role)) {
         router.push('/admin/dashboard')
         router.refresh()
         return

@@ -8,6 +8,7 @@ const roleLabels: Record<string, string> = {
   admin: 'Master Admin',
   bplo: 'BPLO',
   assessor: "Assessor's Office",
+  csdo: 'CSDO',
   treasurer: "Treasurer's Office",
   staff: 'Staff',
   citizen: 'Citizen',
@@ -18,6 +19,7 @@ const roleBadgeColors: Record<string, string> = {
   bplo: 'bg-blue-100 text-blue-700',
   assessor: 'bg-amber-100 text-amber-700',
   treasurer: 'bg-green-100 text-green-700',
+  csdo: 'bg-teal-100 text-teal-700',
   staff: 'bg-gray-100 text-gray-700',
 }
 
@@ -32,7 +34,7 @@ export default function AdminUsersPage() {
   const supabase = createClient()
 
   const fetchUsers = () => {
-    supabase.from('ms_profiles').select('*').in('role', ['admin', 'staff', 'bplo', 'assessor', 'treasurer']).order('created_at', { ascending: false })
+    supabase.from('ms_profiles').select('*').in('role', ['admin', 'staff', 'bplo', 'assessor', 'treasurer', 'csdo']).order('created_at', { ascending: false })
       .then(({ data }) => { setUsers(data || []); setLoading(false) })
   }
 
@@ -146,6 +148,7 @@ export default function AdminUsersPage() {
                         <option value="bplo">BPLO</option>
                         <option value="assessor">Assessor&apos;s Office</option>
                         <option value="treasurer">Treasurer&apos;s Office</option>
+                        <option value="csdo">CSDO</option>
                         <option value="staff">Staff</option>
                         <option value="citizen">Citizen (demote)</option>
                       </select>
@@ -216,6 +219,7 @@ export default function AdminUsersPage() {
                   <option value="bplo">BPLO</option>
                   <option value="assessor">Assessor&apos;s Office</option>
                   <option value="treasurer">Treasurer&apos;s Office</option>
+                  <option value="csdo">CSDO</option>
                   <option value="staff">Staff</option>
                 </select>
                 <p className="text-xs text-gray-400 mt-1">
@@ -223,6 +227,7 @@ export default function AdminUsersPage() {
                   {form.role === 'bplo' && 'Permits, services, citizens, appointments'}
                   {form.role === 'assessor' && 'Tax profiles and transactions'}
                   {form.role === 'treasurer' && 'Payments, collections, and reports'}
+                  {form.role === 'csdo' && 'Beneficiaries and social programs'}
                   {form.role === 'staff' && 'Dashboard access only'}
                 </p>
               </div>
