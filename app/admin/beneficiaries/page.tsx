@@ -26,13 +26,29 @@ export default function AdminBeneficiariesPage() {
   const [filterType, setFilterType] = useState('ALL')
   const [filterBarangay, setFilterBarangay] = useState('ALL')
   const [selected, setSelected] = useState<any>(null)
+  const [page, setPage] = useState(1)
+  const perPage = 50
   const supabase = createClient()
 
   useEffect(() => {
-    supabase.from('ms_beneficiaries')
-      .select('*, ms_beneficiary_programs(program_id, ms_government_programs(name))')
-      .order('created_at', { ascending: false })
-      .then(({ data }) => { setBeneficiaries(data || []); setLoading(false) })
+    const fetchAll = async () => {
+      let all: any[] = []
+      let from = 0
+      const pageSize = 1000
+      while (true) {
+        const { data } = await supabase.from('ms_beneficiaries')
+          .select('*, ms_beneficiary_programs(program_id, ms_government_programs(name))')
+          .order('created_at', { ascending: false })
+          .range(from, from + pageSize - 1)
+        if (!data || data.length === 0) break
+        all = all.concat(data)
+        if (data.length < pageSize) break
+        from += pageSize
+      }
+      setBeneficiaries(all)
+      setLoading(false)
+    }
+    fetchAll()
   }, [])
 
   // Get unique barangays
@@ -100,17 +116,17 @@ export default function AdminBeneficiariesPage() {
             className="input"
             placeholder="Search by name or barangay..."
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setPage(1) }}
           />
         </div>
-        <select className="input w-auto" value={filterType} onChange={e => setFilterType(e.target.value)}>
+        <select className="input w-auto" value={filterType} onChange={e => { setFilterType(e.target.value); setPage(1) }}>
           <option value="ALL">All Programs</option>
           <option value="STUDENT">Student Allowance</option>
           <option value="SENIOR_CITIZEN">Senior Citizen</option>
           <option value="PWD">PWD</option>
           <option value="SOLO_PARENT">Solo Parent</option>
         </select>
-        <select className="input w-auto" value={filterBarangay} onChange={e => setFilterBarangay(e.target.value)}>
+        <select className="input w-auto" value={filterBarangay} onChange={e => { setFilterBarangay(e.target.value); setPage(1) }}>
           <option value="ALL">All Barangays</option>
           {barangays.map(b => <option key={b} value={b}>{b}</option>)}
         </select>
@@ -148,7 +164,7 @@ export default function AdminBeneficiariesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
-                {filtered.slice(0, 100).map(b => {
+                {filtered.slice((page - 1) * perPage, page * perPage).map(b => {
                   const d = b.extra_data || {}
                   const fullName = [d.first_name, d.middle_name, d.last_name, d.extension_name].filter(Boolean).join(' ')
                   return (
@@ -185,9 +201,30 @@ export default function AdminBeneficiariesPage() {
                 })}
               </tbody>
             </table>
-            {filtered.length > 100 && (
-              <div className="text-center py-3 text-xs text-gray-400 bg-gray-50">
-                Showing first 100 of {filtered.length.toLocaleString()} results. Use search or filters to narrow down.
+            {filtered.length > perPage && (
+              <div className="flex items-center justify-between px-5 py-3 bg-gray-50 border-t border-gray-100">
+                <span className="text-xs text-gray-500">
+                  Showing {((page - 1) * perPage) + 1}–{Math.min(page * perPage, filtered.length)} of {filtered.length.toLocaleString()}
+                </span>
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Previous
+                  </button>
+                  <span className="px-3 py-1.5 text-xs font-medium text-gray-600">
+                    Page {page} of {Math.ceil(filtered.length / perPage)}
+                  </span>
+                  <button
+                    onClick={() => setPage(p => Math.min(Math.ceil(filtered.length / perPage), p + 1))}
+                    disabled={page >= Math.ceil(filtered.length / perPage)}
+                    className="px-3 py-1.5 text-xs font-medium rounded-lg border border-gray-200 bg-white hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    Next
+                  </button>
+                </div>
               </div>
             )}
           </div>

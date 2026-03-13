@@ -21,6 +21,19 @@ export default function StatusBadge({ status }: { status: string }) {
     paid: 'Paid',
     unpaid: 'Unpaid',
   }
+  const dotColors: Record<string, string> = {
+    'badge-pending': 'bg-amber-500',
+    'badge-processing': 'bg-blue-500',
+    'badge-ready': 'bg-emerald-500',
+    'badge-completed': 'bg-gray-400',
+    'badge-rejected': 'bg-red-500',
+  }
   const cls = map[status?.toLowerCase()] || 'badge-pending'
-  return <span className={cls}>{labels[status?.toLowerCase()] || status}</span>
+  const dotColor = dotColors[cls] || 'bg-gray-400'
+  return (
+    <span className={cls}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dotColor} inline-block flex-shrink-0`} aria-hidden="true" />
+      {labels[status?.toLowerCase()] || status}
+    </span>
+  )
 }
