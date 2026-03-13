@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
     if (err) { setError(err.message); setLoading(false); return }
     if (data.user) {
       const { data: profile } = await supabase.from('ms_profiles').select('role').eq('user_id', data.user.id).single()
-      if (!profile || !['admin', 'staff'].includes(profile.role)) {
+      if (!profile || !['admin', 'staff', 'bplo', 'assessor', 'treasurer'].includes(profile.role)) {
         await supabase.auth.signOut()
         setError('Access denied. Admin credentials required.')
         setLoading(false)
