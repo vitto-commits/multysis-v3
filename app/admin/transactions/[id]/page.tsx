@@ -18,6 +18,8 @@ export default function AdminTransactionDetailPage() {
   const [saving, setSaving] = useState(false)
   const [paymentAmount, setPaymentAmount] = useState('')
   const [paymentMethod, setPaymentMethod] = useState('cash')
+  const [signedUrls, setSignedUrls] = useState<Record<string, string>>({})
+  const [loadingUrl, setLoadingUrl] = useState<string | null>(null)
   const supabase = createClient()
 
   const fetchData = async () => {
@@ -49,6 +51,34 @@ export default function AdminTransactionDetailPage() {
       created_by: user?.id,
     })
     setNewNote('')
+    await fetchData()
+    setSaving(false)
+  }
+
+  const getSignedUrl = async (filePath: string) => {
+    if (signedUrls[filePath]) {
+      window.open(signedUrls[filePath], '_blank')
+      return
+    }
+    setLoadingUrl(filePath)
+    const res = await fetch(`/api/upload?path=${encodeURIComponent(filePath)}`)
+    const data = await res.json()
+    if (data.url) {
+      setSignedUrls(prev => ({ ...prev, [filePath]: data.url }))
+      window.open(data.url, '_blank')
+    }
+    setLoadingUrl(null)
+  }
+
+  const markDocReceived = async (reqName: string) => {
+    setSaving(true)
+    const currentReqs: any[] = tx.service_data?.requirements_status || []
+    const updated = currentReqs.map((r: any) =>
+      r.name === reqName ? { ...r, status: 'received', received_at: new Date().toISOString() } : r
+    )
+    await supabase.from('ms_transactions').update({
+      service_data: { ...tx.service_data, requirements_status: updated },
+    }).eq('id', id)
     await fetchData()
     setSaving(false)
   }
@@ -131,18 +161,87 @@ export default function AdminTransactionDetailPage() {
                 <dd className="text-sm font-medium text-gray-800 mt-0.5">{new Date(tx.created_at).toLocaleDateString('en-PH', { dateStyle: 'long' })}</dd>
               </div>
             </dl>
-            {tx.service_data && Object.keys(tx.service_data).length > 0 && (
+            {tx.service_data && Object.keys(tx.service_data).filter(k => k !== 'requirements_status').length > 0 && (
               <>
                 <hr className="my-4 border-gray-100" />
                 <h3 className="font-semibold text-gray-700 mb-3 text-sm">Application Data</h3>
                 <dl className="grid grid-cols-2 gap-3">
-                  {Object.entries(tx.service_data).map(([k, v]) => (
+                  {Object.entries(tx.service_data).filter(([k]) => k !== 'requirements_status').map(([k, v]) => (
                     <div key={k}>
                       <dt className="text-xs text-gray-500 capitalize">{k.replace(/_/g, ' ')}</dt>
                       <dd className="text-sm text-gray-800 mt-0.5">{String(v)}</dd>
                     </div>
                   ))}
                 </dl>
+              </>
+            )}
+            {/* Requirements Status */}
+            {Array.isArray(tx.service_data?.requirements_status) && tx.service_data.requirements_status.length > 0 && (
+              <>
+                <hr className="my-4 border-gray-100" />
+                <h3 className="font-semibold text-gray-700 mb-3 text-sm flex items-center gap-2">
+                  <svg className="w-4 h-4 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  Requirements Checklist
+                </h3>
+                <div className="space-y-2">
+                  {tx.service_data.requirements_status.map((req: any, i: number) => (
+                    <div key={i} className={`flex items-center gap-3 p-3 rounded-xl border ${
+                      req.status === 'uploaded' ? 'bg-sky-50 border-sky-200' :
+                      req.status === 'received' ? 'bg-emerald-50 border-emerald-200' :
+                      'bg-amber-50 border-amber-200'
+                    }`}>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-gray-800 truncate">{req.name}</p>
+                        {req.file_name && <p className="text-xs text-gray-500 truncate mt-0.5">{req.file_name}</p>}
+                      </div>
+                      {req.status === 'uploaded' && req.file_path && (
+                        <button
+                          onClick={() => getSignedUrl(req.file_path)}
+                          disabled={loadingUrl === req.file_path}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-all flex-shrink-0"
+                        >
+                          {loadingUrl === req.file_path ? (
+                            <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                          ) : (
+                            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M2.036 12.322a1.012 1.012 0 010-.639C3.423 7.51 7.36 4.5 12 4.5c4.638 0 8.573 3.007 9.963 7.178.07.207.07.431 0 .639C20.577 16.49 16.64 19.5 12 19.5c-4.638 0-8.573-3.007-9.963-7.178z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                          )}
+                          View
+                        </button>
+                      )}
+                      {req.status === 'will_bring' && (
+                        <button
+                          onClick={() => markDocReceived(req.name)}
+                          disabled={saving}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-all flex-shrink-0"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                          </svg>
+                          Mark Received
+                        </button>
+                      )}
+                      {req.status === 'received' && (
+                        <span className="flex items-center gap-1 text-xs font-semibold text-emerald-700 flex-shrink-0">
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Received
+                        </span>
+                      )}
+                      {req.status === 'uploaded' && !req.file_path && (
+                        <span className="text-xs font-semibold text-sky-600 flex-shrink-0">Uploaded</span>
+                      )}
+                      {req.status === 'will_bring' && (
+                        <span className="text-xs text-amber-700 font-medium flex-shrink-0 mr-2">Pending</span>
+                      )}
+                    </div>
+                  ))}
+                </div>
               </>
             )}
           </div>

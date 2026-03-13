@@ -17,7 +17,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    const { service_id, service_data } = await req.json()
+    const { service_id, service_data, requirements_status } = await req.json()
 
     if (!service_id) {
       return NextResponse.json({ error: 'service_id is required' }, { status: 400 })
@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
       transaction_code,
       status: 'pending',
       payment_status: 'unpaid',
-      service_data: service_data || {},
+      service_data: { ...(service_data || {}), requirements_status: requirements_status || [] },
     }).select().single()
 
     if (error) {

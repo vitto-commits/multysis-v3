@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useParams } from 'next/navigation'
 import Navbar from '@/components/Navbar'
@@ -10,11 +10,20 @@ import { createClient } from '@/lib/supabase/client'
 
 const statusSteps = ['pending', 'processing', 'for_pickup', 'completed']
 
+function formatFileSize(bytes: number) {
+  if (bytes < 1024) return bytes + ' B'
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB'
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB'
+}
+
 export default function ApplicationDetailPage() {
   const { id } = useParams()
   const [tx, setTx] = useState<any>(null)
   const [notes, setNotes] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
+  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const fileInputRefs = useRef<Record<number, HTMLInputElement | null>>({})
   const supabase = createClient()
 
   useEffect(() => {
@@ -36,6 +45,42 @@ export default function ApplicationDetailPage() {
     }
     fetchData()
   }, [id])
+
+  const uploadMissingDoc = async (reqIdx: number, file: File) => {
+    const allowed = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png']
+    if (!allowed.includes(file.type)) { setUploadError('Only PDF, JPG, PNG allowed'); return }
+    if (file.size > 10 * 1024 * 1024) { setUploadError('File must be under 10MB'); return }
+    setUploadError(null)
+    setUploadingIdx(reqIdx)
+
+    const fd = new FormData()
+    fd.append('file', file)
+    fd.append('transaction_id', id as string)
+    fd.append('requirement_name', tx.service_data?.requirements_status?.[reqIdx]?.name || 'document')
+
+    const res = await fetch('/api/upload', { method: 'POST', body: fd })
+    const data = await res.json()
+
+    if (!res.ok || data.error) {
+      setUploadError(data.error || 'Upload failed')
+      setUploadingIdx(null)
+      return
+    }
+
+    // Update transaction's requirements_status
+    const currentReqs: any[] = tx.service_data?.requirements_status || []
+    const updated = currentReqs.map((r: any, i: number) =>
+      i === reqIdx ? { ...r, status: 'uploaded', file_path: data.file_path, file_name: file.name } : r
+    )
+    await supabase.from('ms_transactions').update({
+      service_data: { ...tx.service_data, requirements_status: updated },
+    }).eq('id', id)
+
+    // Refresh
+    const { data: newTx } = await supabase.from('ms_transactions').select('*, ms_services(*)').eq('id', id).single()
+    setTx(newTx)
+    setUploadingIdx(null)
+  }
 
   if (loading) {
     return (
@@ -128,12 +173,97 @@ export default function ApplicationDetailPage() {
               )}
             </div>
 
+            {/* Requirements Status */}
+            {Array.isArray(tx.service_data?.requirements_status) && tx.service_data.requirements_status.length > 0 && (
+              <div className="card">
+                <h2 className="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                  <svg className="w-5 h-5 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
+                  </svg>
+                  Requirements Status
+                </h2>
+                {uploadError && (
+                  <div className="mb-3 p-3 rounded-lg bg-red-50 border border-red-200 text-sm text-red-700 flex items-center gap-2">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
+                    </svg>
+                    {uploadError}
+                  </div>
+                )}
+                <div className="space-y-3">
+                  {tx.service_data.requirements_status.map((req: any, i: number) => (
+                    <div key={i} className={`rounded-xl border p-4 ${
+                      req.status === 'uploaded' ? 'bg-sky-50 border-sky-200' :
+                      req.status === 'received' ? 'bg-emerald-50 border-emerald-200' :
+                      'bg-amber-50 border-amber-100'
+                    }`}>
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-gray-800">{req.name}</p>
+                          {req.file_name && <p className="text-xs text-gray-500 mt-0.5 truncate">{req.file_name}</p>}
+                        </div>
+                        <div className="flex items-center gap-2 flex-shrink-0">
+                          {req.status === 'uploaded' && (
+                            <span className="flex items-center gap-1.5 text-xs font-semibold text-sky-700 bg-sky-100 px-2.5 py-1 rounded-full">
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                              </svg>
+                              Uploaded
+                            </span>
+                          )}
+                          {req.status === 'received' && (
+                            <span className="flex items-center gap-1.5 text-xs font-semibold text-emerald-700 bg-emerald-100 px-2.5 py-1 rounded-full">
+                              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              Received
+                            </span>
+                          )}
+                          {req.status === 'will_bring' && (
+                            <>
+                              <span className="flex items-center gap-1.5 text-xs font-semibold text-amber-700 bg-amber-100 px-2.5 py-1 rounded-full">
+                                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                                </svg>
+                                Bring to office
+                              </span>
+                              <button
+                                onClick={() => fileInputRefs.current[i]?.click()}
+                                disabled={uploadingIdx === i}
+                                className="flex items-center gap-1.5 text-xs font-semibold text-sky-700 bg-white border border-sky-300 px-2.5 py-1 rounded-full hover:bg-sky-50 transition-all"
+                              >
+                                {uploadingIdx === i ? (
+                                  <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                                ) : (
+                                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                                  </svg>
+                                )}
+                                Upload instead
+                              </button>
+                              <input
+                                type="file"
+                                className="hidden"
+                                accept=".pdf,.jpg,.jpeg,.png"
+                                ref={el => { fileInputRefs.current[i] = el }}
+                                onChange={e => e.target.files?.[0] && uploadMissingDoc(i, e.target.files[0])}
+                              />
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Application Data */}
-            {tx.service_data && Object.keys(tx.service_data).length > 0 && (
+            {tx.service_data && Object.keys(tx.service_data).filter((k: string) => k !== 'requirements_status').length > 0 && (
               <div className="card">
                 <h2 className="font-bold text-gray-900 mb-4">Application Details</h2>
                 <dl className="space-y-3">
-                  {Object.entries(tx.service_data).map(([k, v]) => (
+                  {Object.entries(tx.service_data).filter(([k]) => k !== 'requirements_status').map(([k, v]) => (
                     <div key={k} className="flex gap-4">
                       <dt className="text-sm text-gray-500 capitalize w-1/3">{k.replace(/_/g, ' ')}</dt>
                       <dd className="text-sm font-medium text-gray-800 flex-1">{String(v)}</dd>
