@@ -4,13 +4,22 @@ import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { TableSkeleton } from '@/components/LoadingSkeleton'
 
+const roleLabels: Record<string, string> = {
+  admin: 'Master Admin',
+  bplo: 'BPLO',
+  assessor: "Assessor's Office",
+  treasurer: "Treasurer's Office",
+  staff: 'Staff',
+  citizen: 'Citizen',
+}
+
 export default function AdminUsersPage() {
   const [users, setUsers] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   useEffect(() => {
-    supabase.from('ms_profiles').select('*').in('role', ['admin', 'staff']).order('created_at', { ascending: false })
+    supabase.from('ms_profiles').select('*').in('role', ['admin', 'staff', 'bplo', 'assessor', 'treasurer']).order('created_at', { ascending: false })
       .then(({ data }) => { setUsers(data || []); setLoading(false) })
   }, [])
 
@@ -67,19 +76,26 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-5 py-3 text-gray-600">{u.phone || '—'}</td>
                     <td className="px-5 py-3">
-                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full capitalize ${
-                        u.role === 'admin' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'
-                      }`}>{u.role}</span>
+                      <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${
+                        u.role === 'admin' ? 'bg-purple-100 text-purple-700' :
+                        u.role === 'bplo' ? 'bg-blue-100 text-blue-700' :
+                        u.role === 'assessor' ? 'bg-amber-100 text-amber-700' :
+                        u.role === 'treasurer' ? 'bg-green-100 text-green-700' :
+                        'bg-gray-100 text-gray-700'
+                      }`}>{roleLabels[u.role] || u.role}</span>
                     </td>
                     <td className="px-5 py-3">
                       <select
-                        className="text-xs border border-gray-200 rounded-lg px-2 py-1"
+                        className="text-xs border border-gray-200 rounded-lg px-2 py-1.5 bg-white"
                         value={u.role}
                         onChange={e => updateRole(u.id, e.target.value)}
                       >
-                        <option value="admin">Admin</option>
+                        <option value="admin">Master Admin</option>
+                        <option value="bplo">BPLO</option>
+                        <option value="assessor">Assessor&apos;s Office</option>
+                        <option value="treasurer">Treasurer&apos;s Office</option>
                         <option value="staff">Staff</option>
-                        <option value="citizen">Citizen</option>
+                        <option value="citizen">Citizen (demote)</option>
                       </select>
                     </td>
                   </tr>
