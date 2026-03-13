@@ -176,7 +176,7 @@ export default function ServiceDetailPage() {
                 </div>
               </div>
               <p className="text-gray-600 leading-relaxed">
-                {service.description || 'Apply for this official city government service through the Multysis digital portal.'}
+                {service.description || 'Apply for this official city government service through the Borongan E-Services digital portal.'}
               </p>
             </div>
 

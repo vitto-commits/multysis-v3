@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Multysis — City of Borongan Digital Services",
+  title: "Borongan E-Services — City of Borongan Digital Services",
   description: "Your digital gateway to City of Borongan, Eastern Samar government services.",
 };
 

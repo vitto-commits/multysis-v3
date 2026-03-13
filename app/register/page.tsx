@@ -72,13 +72,9 @@ export default function RegisterPage() {
       <div className="w-full max-w-lg">
         <div className="text-center mb-8">
           <Link href="/" className="inline-flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-              <svg className="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            </div>
+            <img src="/city-seal.png" alt="City of Borongan Seal" className="w-10 h-10 object-contain" />
             <div className="text-left">
-              <div className="font-bold text-gray-900 leading-none">Multysis</div>
+              <div className="font-bold text-gray-900 leading-none">Borongan E-Services</div>
               <div className="text-xs text-gray-500">City of Borongan</div>
             </div>
           </Link>

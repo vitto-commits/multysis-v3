@@ -36,7 +36,7 @@ export default function FAQsPage() {
       <section className="bg-gradient-to-r from-primary to-blue-700 text-white py-14">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl font-extrabold mb-2">Frequently Asked Questions</h1>
-          <p className="text-blue-100">Find answers to common questions about Multysis and city services</p>
+          <p className="text-blue-100">Find answers to common questions about Borongan E-Services and city services</p>
         </div>
       </section>
 
