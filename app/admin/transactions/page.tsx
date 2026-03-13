@@ -70,34 +70,42 @@ export default function AdminTransactionsPage() {
         {loading ? (
           <div className="p-6"><TableSkeleton rows={6} /></div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-gray-400">No transactions found</div>
+          <div className="p-16 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
+              <svg className="w-7 h-7 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+              </svg>
+            </div>
+            <p className="text-gray-400 font-medium">No transactions found</p>
+            <p className="text-gray-300 text-sm mt-1">Try changing your filter or search term</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="admin-table">
               <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
-                  <th className="text-left px-5 py-3 font-medium">Ref Code</th>
-                  <th className="text-left px-5 py-3 font-medium">Citizen</th>
-                  <th className="text-left px-5 py-3 font-medium">Service</th>
-                  <th className="text-left px-5 py-3 font-medium">Status</th>
-                  <th className="text-left px-5 py-3 font-medium">Payment</th>
-                  <th className="text-left px-5 py-3 font-medium">Date</th>
-                  <th className="text-left px-5 py-3 font-medium">Action</th>
+                <tr>
+                  <th>Ref Code</th>
+                  <th>Citizen</th>
+                  <th>Service</th>
+                  <th>Status</th>
+                  <th>Payment</th>
+                  <th>Date</th>
+                  <th>Action</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody>
                 {filtered.map(tx => (
-                  <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-5 py-3 font-mono font-medium text-primary text-xs">{tx.transaction_code}</td>
-                    <td className="px-5 py-3 text-gray-700">
+                  <tr key={tx.id}>
+                    <td className="font-mono font-semibold text-primary text-xs">{tx.transaction_code}</td>
+                    <td className="text-gray-700 font-medium">
                       {tx.ms_profiles ? `${tx.ms_profiles.first_name} ${tx.ms_profiles.last_name}` : '—'}
                     </td>
-                    <td className="px-5 py-3 text-gray-700 max-w-[180px] truncate">{tx.ms_services?.name || '—'}</td>
-                    <td className="px-5 py-3"><StatusBadge status={tx.status} /></td>
-                    <td className="px-5 py-3"><StatusBadge status={tx.payment_status || 'unpaid'} /></td>
-                    <td className="px-5 py-3 text-gray-500">{new Date(tx.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: '2-digit' })}</td>
-                    <td className="px-5 py-3">
-                      <Link href={`/admin/transactions/${tx.id}`} className="text-primary hover:underline text-xs font-medium">View</Link>
+                    <td className="text-gray-600 max-w-[180px] truncate">{tx.ms_services?.name || '—'}</td>
+                    <td><StatusBadge status={tx.status} /></td>
+                    <td><StatusBadge status={tx.payment_status || 'unpaid'} /></td>
+                    <td className="text-gray-400 text-xs">{new Date(tx.created_at).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: '2-digit' })}</td>
+                    <td>
+                      <Link href={`/admin/transactions/${tx.id}`} className="text-primary hover:text-blue-800 text-xs font-semibold transition-colors">View →</Link>
                     </td>
                   </tr>
                 ))}

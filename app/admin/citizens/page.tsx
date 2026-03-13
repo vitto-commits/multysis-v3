@@ -47,32 +47,38 @@ export default function AdminCitizensPage() {
         {loading ? (
           <div className="p-6"><TableSkeleton rows={8} /></div>
         ) : filtered.length === 0 ? (
-          <div className="p-12 text-center text-gray-400">No citizens found</div>
+          <div className="p-16 text-center">
+            <div className="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center mx-auto mb-3">
+              <svg className="w-7 h-7 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            </div>
+            <p className="text-gray-400 font-medium">No citizens found</p>
+            <p className="text-gray-300 text-sm mt-1">Citizens will appear here after registering</p>
+          </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="admin-table">
               <thead>
-                <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
-                  <th className="text-left px-5 py-3 font-medium">Name</th>
-                  <th className="text-left px-5 py-3 font-medium">Phone</th>
-                  <th className="text-left px-5 py-3 font-medium">Registered</th>
+                <tr>
+                  <th>Name</th>
+                  <th>Phone</th>
+                  <th>Registered</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody>
                 {filtered.map(c => (
-                  <tr key={c.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-5 py-3">
+                  <tr key={c.id}>
+                    <td>
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                        <div className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center font-bold text-sm flex-shrink-0">
                           {c.first_name?.[0]?.toUpperCase() || '?'}
                         </div>
-                        <div>
-                          <div className="font-medium text-gray-900">{c.first_name} {c.last_name}</div>
-                        </div>
+                        <div className="font-medium text-gray-900">{c.first_name} {c.last_name}</div>
                       </div>
                     </td>
-                    <td className="px-5 py-3 text-gray-600">{c.phone || '—'}</td>
-                    <td className="px-5 py-3 text-gray-500">{new Date(c.created_at).toLocaleDateString('en-PH', { dateStyle: 'medium' })}</td>
+                    <td className="text-gray-600">{c.phone || '—'}</td>
+                    <td className="text-gray-400 text-xs">{new Date(c.created_at).toLocaleDateString('en-PH', { dateStyle: 'medium' })}</td>
                   </tr>
                 ))}
               </tbody>

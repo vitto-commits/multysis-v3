@@ -132,39 +132,45 @@ function ServicesContent() {
           {Array.from({ length: 6 }).map((_, i) => <CardSkeleton key={i} />)}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-20">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
+        <div className="text-center py-24">
+          <div className="w-20 h-20 mx-auto mb-5 rounded-3xl bg-gray-100 flex items-center justify-center text-gray-300">
+            <svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" /></svg>
           </div>
           <h3 className="text-xl font-bold text-gray-700 mb-2">No services found</h3>
-          <p className="text-gray-500">Try adjusting your search or filter criteria</p>
+          <p className="text-gray-500 text-sm">Try adjusting your search or filter criteria</p>
+          <button onClick={() => { setSearch(''); setActiveCategory('') }} className="mt-4 text-primary text-sm font-medium hover:underline">
+            Clear filters
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {filtered.map(service => (
-            <div key={service.id} className="card hover:shadow-md transition-all duration-200 hover:-translate-y-0.5 flex flex-col">
-              <div className="flex items-start justify-between mb-3">
-                <div className="w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center text-gray-600">
+            <div key={service.id} className="group card hover:shadow-card-hover transition-all duration-300 hover:-translate-y-1.5 hover:border-blue-200/60 flex flex-col">
+              <div className="flex items-start justify-between mb-4">
+                <div className="w-11 h-11 rounded-xl bg-gray-100 group-hover:bg-primary/10 flex items-center justify-center text-gray-500 group-hover:text-primary transition-all duration-300">
                   <CategoryIcon id={service.category} className="w-5 h-5" />
                 </div>
-                <span className={`text-xs font-medium px-2.5 py-1 rounded-full ${categoryColors[service.category] || 'bg-gray-100 text-gray-700'}`}>
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${categoryColors[service.category] || 'bg-gray-100 text-gray-700'}`}>
                   {categoryLabels[service.category] || service.category}
                 </span>
               </div>
-              <h3 className="font-bold text-gray-900 mb-2">{service.name}</h3>
+              <h3 className="font-bold text-gray-900 mb-2 group-hover:text-primary transition-colors">{service.name}</h3>
               <p className="text-sm text-gray-500 flex-1 leading-relaxed mb-4">
                 {service.description || 'Apply for this city government service online.'}
               </p>
               {service.requires_payment && (
-                <div className="text-sm text-gray-600 mb-4 flex items-center gap-1">
-                  <svg className="w-4 h-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="text-sm font-medium text-emerald-700 mb-4 flex items-center gap-1.5 bg-emerald-50 px-3 py-1.5 rounded-lg w-fit">
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
-                  Fee: ₱{service.default_amount?.toFixed(2) || '0.00'}
+                  ₱{service.default_amount?.toFixed(2) || '0.00'} fee
                 </div>
               )}
-              <Link href={`/services/${service.code}`} className="btn-primary text-sm py-2 justify-center">
+              <Link href={`/services/${service.code}`} className="btn-primary text-sm py-2.5 justify-center">
                 Apply Now
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
               </Link>
             </div>
           ))}

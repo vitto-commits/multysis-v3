@@ -124,12 +124,22 @@ export default function RegisterPage() {
     return true
   }
 
+  const stepLabels = ['Personal Info', 'Address & Contact', 'Account & ID']
+  const progressPct = ((step - 1) / 2) * 100
+
   return (
-    <div className="min-h-screen bg-bg-base flex items-center justify-center px-4 py-10">
-      <div className="w-full max-w-2xl">
+    <div className="min-h-screen bg-gradient-to-br from-bg-base via-blue-50/20 to-bg-base flex items-center justify-center px-4 py-10">
+      {/* Background decoration */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-primary/4 blur-3xl" />
+        <div className="absolute bottom-0 left-0 w-96 h-96 rounded-full bg-accent/4 blur-3xl" />
+      </div>
+      <div className="relative w-full max-w-2xl" style={{ animation: 'fadeInUp 0.5s ease-out' }}>
         <div className="text-center mb-8">
-          <Link href="/" className="inline-flex items-center gap-3 mb-2">
-            <img src="/city-seal.png" alt="City of Borongan Seal" className="w-10 h-10 object-contain" />
+          <Link href="/" className="inline-flex items-center gap-3 group mb-2">
+            <div className="w-10 h-10 rounded-xl bg-white shadow-card flex items-center justify-center group-hover:shadow-card-hover transition-shadow">
+              <img src="/city-seal.png" alt="City of Borongan Seal" className="w-7 h-7 object-contain" />
+            </div>
             <div className="text-left">
               <div className="font-bold text-gray-900 leading-none">Borongan E-Services</div>
               <div className="text-xs text-gray-500">City of Borongan</div>
@@ -139,29 +149,47 @@ export default function RegisterPage() {
           <p className="text-gray-500 text-sm mt-1">Register to access City of Borongan digital services</p>
         </div>
 
-        {/* Step Indicator */}
-        <div className="flex items-center justify-center gap-2 mb-6">
-          {['Personal Info', 'Address & Contact', 'Account & ID'].map((label, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
-                step > i + 1 ? 'bg-green-500 text-white' :
-                step === i + 1 ? 'bg-primary text-white' : 'bg-gray-200 text-gray-500'
-              }`}>
-                {step > i + 1 ? (
-                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                ) : i + 1}
+        {/* Progress Bar */}
+        <div className="mb-7">
+          <div className="flex items-center justify-between mb-3">
+            {stepLabels.map((label, i) => (
+              <div key={i} className={`flex items-center gap-2 ${i === step - 1 ? 'text-primary' : step > i + 1 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 transition-all ${
+                  step > i + 1 ? 'bg-emerald-500 text-white' :
+                  step === i + 1 ? 'bg-primary text-white ring-4 ring-primary/20' :
+                  'bg-gray-200 text-gray-500'
+                }`}>
+                  {step > i + 1 ? (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  ) : i + 1}
+                </div>
+                <span className="text-xs font-medium hidden sm:block">{label}</span>
               </div>
-              <span className={`text-xs font-medium hidden sm:inline ${step === i + 1 ? 'text-primary' : 'text-gray-400'}`}>{label}</span>
-              {i < 2 && <div className="w-8 h-0.5 bg-gray-200 hidden sm:block" />}
-            </div>
-          ))}
+            ))}
+          </div>
+          {/* Progress track */}
+          <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
+            <div
+              className="h-full bg-gradient-to-r from-primary to-blue-500 rounded-full transition-all duration-500 ease-out"
+              style={{ width: `${progressPct === 0 ? 5 : progressPct}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-gray-400 mt-1.5">
+            <span>Step {step} of 3</span>
+            <span>{stepLabels[step - 1]}</span>
+          </div>
         </div>
 
-        <div className="card shadow-sm">
+        <div className="card shadow-card-hover">
           {error && (
-            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-danger">{error}</div>
+            <div className="mb-5 p-3.5 bg-red-50 border border-red-200 rounded-xl text-sm text-danger flex items-start gap-2 animate-fade-in">
+              <svg className="w-4 h-4 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>{error}</span>
+            </div>
           )}
 
           <form onSubmit={handleSubmit}>
@@ -325,9 +353,12 @@ export default function RegisterPage() {
             )}
 
             {/* Navigation Buttons */}
-            <div className="flex gap-3 mt-6">
+            <div className="flex gap-3 mt-8 pt-5 border-t border-gray-100">
               {step > 1 && (
-                <button type="button" onClick={() => setStep(step - 1)} className="btn-secondary flex-1 justify-center">
+                <button type="button" onClick={() => setStep(step - 1)} className="btn-secondary flex-1 justify-center py-2.5">
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                  </svg>
                   Back
                 </button>
               )}
@@ -336,22 +367,40 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => setStep(step + 1)}
                   disabled={!canGoNext()}
-                  className="btn-primary flex-1 justify-center py-3"
+                  className="btn-primary flex-1 justify-center py-2.5"
                 >
-                  Next
+                  Continue
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                  </svg>
                 </button>
               ) : (
-                <button type="submit" disabled={loading || !canGoNext()} className="btn-primary flex-1 justify-center py-3">
-                  {loading ? 'Creating account...' : 'Create Account'}
+                <button type="submit" disabled={loading || !canGoNext()} className="btn-primary flex-1 justify-center py-2.5">
+                  {loading ? (
+                    <>
+                      <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                      </svg>
+                      Creating account...
+                    </>
+                  ) : (
+                    <>
+                      Create Account
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </>
+                  )}
                 </button>
               )}
             </div>
           </form>
         </div>
 
-        <p className="text-center text-sm text-gray-600 mt-4">
+        <p className="text-center text-sm text-gray-600 mt-5">
           Already have an account?{' '}
-          <Link href="/login" className="text-primary font-medium hover:underline">Sign in</Link>
+          <Link href="/login" className="text-primary font-semibold hover:text-blue-800 transition-colors">Sign in</Link>
         </p>
       </div>
     </div>
